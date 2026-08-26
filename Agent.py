@@ -22,7 +22,7 @@ from langgraph.prebuilt import ToolNode, tools_condition
 load_dotenv()
 api_key = os.getenv("GROQ_API_KEY")
 
-# ===== Story genres =====
+# Story genres 
 GENRES = {
     "1": "Romance",
     "2": "Comedy",
@@ -33,7 +33,7 @@ GENRES = {
     "7": "Drama",
 }
 
-# ===== Guardrails =====
+# Guardrails 
 UNSAFE_WORDS = ["violent", "gore", "explicit", "naked", "blood", "weapon", "drug", "murder", "suicide", "rape", "torture", "slave", "abuse", "horror", "satan", "hell", "demon", "curse", "kill", "hate", "terror"]
 
 def is_safe(text: str) -> bool:
@@ -47,7 +47,7 @@ def sanitize_text(text: str) -> str:
             text = text.replace(old, new)
     return text
 
-# ===== Tools =====
+# Tools 
 _current_turn = {"n": 0}
 
 @tool
@@ -86,11 +86,11 @@ def generate_scene_audio(narration_text: str) -> str:
 
 TOOLS = [generate_scene_image, generate_scene_audio]
 
-# ===== Model =====
+# Model 
 llm = ChatGroq(model="openai/gpt-oss-20b", temperature=0.8, groq_api_key=api_key)
 llm_with_tools = llm.bind_tools(TOOLS)
 
-# ===== State =====
+# State 
 class MultiAgentState(TypedDict):
     genre: str
     user_choice: str
@@ -107,7 +107,7 @@ class MultiAgentState(TypedDict):
     next_step: str
     error: str
 
-# ===== 1. Orchestrator Agent =====
+# 1. Orchestrator Agent 
 def orchestrator_node(state: MultiAgentState) -> dict:
     _current_turn["n"] = state["turn"]
     
@@ -151,7 +151,7 @@ User choice: {state.get('user_choice', 'start')}"""
             "next_step": "writer"
         }
 
-# ===== 2. Story Writer Agent =====
+# 2. Story Writer Agent 
 def writer_node(state: MultiAgentState) -> dict:
     force_ending = state["turn"] >= 6
     story_so_far = "\n".join(state["history"]) if state["history"] else "(the story is just beginning)"
@@ -204,7 +204,7 @@ Reply with ONLY valid JSON:
             "is_ending": force_ending,
         }
 
-# ===== 3. Image Agent =====
+# 3. Image Agent 
 def image_node(state: MultiAgentState) -> dict:
     if state.get("assigned_agent") in ["image", "all"]:
         image_desc = state.get("plan", state.get("narration", ""))[:200]
@@ -213,7 +213,7 @@ def image_node(state: MultiAgentState) -> dict:
         return {"image_path": result, "next_step": END}
     return {"next_step": END}
 
-# ===== 4. Audio Agent =====
+# 4. Audio Agent 
 def audio_node(state: MultiAgentState) -> dict:
     if state.get("assigned_agent") in ["audio", "all"]:
         audio_text = state.get("narration", "")
@@ -222,7 +222,7 @@ def audio_node(state: MultiAgentState) -> dict:
         return {"audio_path": result, "next_step": END}
     return {"next_step": END}
 
-# ===== Routing =====
+# Routing 
 def route_after_writer(state: MultiAgentState) -> str:
     assigned = state.get("assigned_agent", "writer")
     if state.get("is_ending"):
@@ -237,7 +237,7 @@ def route_after_writer(state: MultiAgentState) -> str:
 def route_after_orchestrator(state: MultiAgentState) -> str:
     return "writer"
 
-# ===== Graph =====
+# Graph 
 graph = StateGraph(MultiAgentState)
 
 graph.add_node("orchestrator", orchestrator_node)
@@ -254,7 +254,7 @@ graph.add_edge("audio", END)
 
 app = graph.compile()
 
-# ===== Run =====
+# Run
 def run_story():
     print("🎭 Multi-Agent Interactive Storytelling System")
     print("=" * 60)
