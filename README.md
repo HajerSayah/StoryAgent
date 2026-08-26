@@ -41,13 +41,11 @@ pip install -r requirements.txt
 
 ## Usage
 1. Create a `.env` file with your Groq API key:
-```text
 GROQ_API_KEY=your_key_here
-```
+
 2. Run the Streamlit app:
-```bash
 streamlit run app.py
-```
+
 3. Choose a genre and start your interactive story.
 
 ## Project Structure
@@ -62,5 +60,4 @@ StoryAgent/
 └── story_audio/          # Generated audio files
 ```
 
-## License
-MIT
+
